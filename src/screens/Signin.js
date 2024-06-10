@@ -8,7 +8,9 @@ import {
   Image,
   TouchableOpacity,
   TextInput,
+  ToastAndroid,
 } from 'react-native';
+
 import BASE_URI from '../../android/config.url';
 import axios from 'axios';
 const Signin = () => {
@@ -39,6 +41,7 @@ const Signin = () => {
         if (error === 'Fill all fields') {
           return setError('Fill all fields');
         }
+
         if (error === 'User not found') {
           return setError('User not found');
         }
@@ -73,7 +76,7 @@ const Signin = () => {
             setMobile(text);
           }}
         />
-        <Text style={{color: 'white'}}>{Error && Error}</Text>
+        <Text style={styles.error}>{Error && Error}</Text>
         <View>
           <TouchableOpacity onPress={savedotp} style={styles.textcontainer}>
             <Text style={{color: 'white'}}> SIGN IN</Text>
@@ -169,5 +172,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     margin: 16,
     marginTop: 100,
+  },
+  error: {
+    color: '#FA4A0C',
+    margin: '2%',
+    marginLeft: 16,
   },
 });

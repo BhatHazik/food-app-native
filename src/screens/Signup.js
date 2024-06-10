@@ -12,7 +12,9 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  ToastAndroid,
 } from 'react-native';
+
 import BASE_URI from '../../android/config.url';
 import axios from 'axios';
 const {width, height} = Dimensions.get('window');
@@ -39,6 +41,7 @@ const Signup = () => {
         const result = response.data;
         console.log(result);
         navigation2.navigate('CodeScreen', Data);
+        showToast();
       },
       err => {
         const error = err.response.data.message;
@@ -46,6 +49,7 @@ const Signup = () => {
         if (error === 'fill all feilds') {
           return setError('fill all feilds');
         }
+
         if (error === 'Phone number or email already exists') {
           return setError('Phone number or email already exists');
         }
@@ -93,6 +97,7 @@ const Signup = () => {
             setMobile(text);
           }}
         />
+
         <Text style={{color: 'white'}}>{Error && Error}</Text>
         <TouchableOpacity onPress={loginOtp} style={styles.textcontainer}>
           <Text style={{color: 'white'}}> SIGN UP</Text>
