@@ -77,7 +77,7 @@ const Styles = StyleSheet.create({
   container: {
     height: '100%',
     width: 360,
-    backgroundColor: 'black',
+    backgroundColor: '#202020',
     margin: 'auto',
     marginTop: 20,
     borderRadius: 10,

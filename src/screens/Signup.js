@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   inputcontainer: {
     height: height * 0.7,
     width: '100%',
-    backgroundColor: 'black',
+    backgroundColor: '#202020',
     top: '30%',
     borderTopRightRadius: 50,
     borderTopLeftRadius: 50,

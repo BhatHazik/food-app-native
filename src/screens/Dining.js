@@ -16,21 +16,19 @@ import {
   TouchableOpacity,
   View,
   Linking,
+  Button,
+  Dimensions,
 } from 'react-native';
 
 import BASE_URI from '../../android/config.url';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView from 'react-native-maps';
+
+const {width, height} = Dimensions.get('window');
 const Dining = () => {
-  const images = [
-    require('../assets/Biryani.png'),
-    require('../assets/Burger.png'),
-    require('../assets/shawarma.png'),
-    require('../assets/Rolls.png'),
-    require('../assets/pizza.png'),
-    require('../assets/chinese.png'),
-  ];
   const [restautrants, setRestaurants] = useState([]);
+
+  const [food, setfood] = useState('');
   const navigation = useNavigation();
 
   // const data = ['', '', '', '', '', ''];
@@ -81,6 +79,7 @@ const Dining = () => {
       );
     } else {
       console.log('Not authorized');
+      navigation.navigate('LoadingPage');
     }
   };
 
@@ -102,13 +101,16 @@ const Dining = () => {
     getloacationpermission();
   }, []);
 
-  const renderItem = ({item}) => (
-    <View style={Styles.items}>
-      <TouchableOpacity onPress={() => navigation.navigate('Biryani')}>
-        <Image source={item} style={{height: 133, width: 100}} />
-      </TouchableOpacity>
-    </View>
-  );
+  // const renderItem = ({item}) => (
+  //   <View style={Styles.items}>
+  //     <TouchableOpacity
+  //       onPress={() => {
+  //         setfood('biryani'), navigation.navigate('Biryani', food,);
+  //       }}>
+  //       <Image source={item} style={{height: 133, width: 100}} />
+  //     </TouchableOpacity>
+  //   </View>
+  // );
   const renderItem2 = ({item}) => (
     <View style={Styles.itemcover}>
       <Image
@@ -132,7 +134,7 @@ const Dining = () => {
           marginTop: 15,
         }}></View>
       <View style={{flexDirection: 'row', marginTop: 10, left: -40}}>
-        <View style={Styles.rating}>
+        <View style={item.avg_rating < 3 ? Styles.rating2 : Styles.rating}>
           <Text style={{color: 'white'}}>{item.avg_rating}</Text>
           <Image
             source={require('../assets/star.png')}
@@ -274,18 +276,76 @@ const Dining = () => {
                 style={Styles.textbox}
                 placeholder="Search for Food"
                 placeholderTextColor={'#FA4A0C'}
+                onPress={() => navigation.navigate('Search')}
               />
             </View>
           </View>
         </View>
         <View style={{marginRight: 16, marginLeft: 16}}>
-          <FlatList
+          {/* <FlatList
             data={images}
             renderItem={renderItem}
             horizontal={true}
             showsHorizontalScrollIndicator={false}
-          />
-
+          /> */}
+          <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+            <View style={{flexDirection: 'row'}}>
+              <TouchableOpacity
+                onPress={() => {
+                  setfood('Biryani'), navigation.navigate('Biryani', food);
+                }}>
+                <Image
+                  source={require('../assets/Biryani.png')}
+                  style={Styles.items}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setfood('Burger'), navigation.navigate('Biryani', food);
+                }}>
+                <Image
+                  source={require('../assets/Burger.png')}
+                  style={Styles.items}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setfood('shawarma'), navigation.navigate('Biryani', food);
+                }}>
+                <Image
+                  source={require('../assets/shawarma.png')}
+                  style={Styles.items}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setfood('Rolls'), navigation.navigate('Biryani', food);
+                }}>
+                <Image
+                  source={require('../assets/Rolls.png')}
+                  style={Styles.items}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setfood('pizza'), navigation.navigate('Biryani', food);
+                }}>
+                <Image
+                  source={require('../assets/pizza.png')}
+                  style={Styles.items}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setfood('chinese'), navigation.navigate('Biryani', food);
+                }}>
+                <Image
+                  source={require('../assets/chinese.png')}
+                  style={Styles.items}
+                />
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
           <View style={Styles.viewcontainer}>
             <Text style={{fontSize: 20, fontWeight: '600', color: 'black'}}>
               Nearest
@@ -300,6 +360,7 @@ const Dining = () => {
               />
             </TouchableOpacity>
           </View>
+
           <View>
             <FlatList
               data={restautrants}
@@ -379,7 +440,7 @@ const Styles = StyleSheet.create({
   header: {
     height: 200,
     width: '100%',
-    backgroundColor: 'black',
+    backgroundColor: '#202020',
     borderBottomLeftRadius: 50,
     borderBottomRightRadius: 50,
   },
@@ -411,18 +472,17 @@ const Styles = StyleSheet.create({
   },
   textcontainer: {
     marginTop: 25,
-    width: 290,
+    width: '70%',
   },
   title: {
     fontSize: 16,
     fontWeight: '400',
   },
   items: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: 10,
-    marginTop: 25,
-    paddingRight: 10,
+    height: height * 0.25,
+    width: width * 0.25,
+    resizeMode: 'contain',
+    marginRight: 30,
   },
   images: {
     width: 117,
@@ -459,7 +519,7 @@ const Styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
     marginRight: 25,
-    backgroundColor: 'black',
+    backgroundColor: '#202020',
   },
   bigcontainer: {
     height: 300,
@@ -482,5 +542,17 @@ const Styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 30,
+  },
+  rating2: {
+    backgroundColor: 'red',
+    width: 40,
+    borderRadius: 5,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 30,
+  },
+  opacity: {
+    backgroundColor: 'white',
   },
 });

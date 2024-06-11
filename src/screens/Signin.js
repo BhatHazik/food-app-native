@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   inputcontainer: {
     height: 600,
     width: '100%',
-    backgroundColor: 'black',
+    backgroundColor: '#202020',
     borderTopLeftRadius: 50,
     borderTopRightRadius: 50,
   },

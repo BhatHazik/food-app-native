@@ -12,6 +12,7 @@ import Toprated from './src/screens/Toprated';
 import Popular from './src/screens/Popular';
 import Biryani from './src/screens/Biryani';
 import Nearest from './src/screens/Nearest';
+import Search from './src/screens/search';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -20,10 +21,16 @@ const App = () => {
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen
+          name="Dashboard"
+          component={Dashboard}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
           name="LoadingPage"
           component={LoadingPage}
           options={{headerShown: false}}
         />
+
         <Stack.Screen
           name="Signup"
           component={Signup}
@@ -39,11 +46,7 @@ const App = () => {
           component={CodeScreen}
           options={{headerShown: false}}
         />
-        <Stack.Screen
-          name="Dashboard"
-          component={Dashboard}
-          options={{headerShown: false}}
-        />
+
         <Stack.Screen
           name="Toprated"
           component={Toprated}
@@ -62,6 +65,11 @@ const App = () => {
         <Stack.Screen
           name="Nearest"
           component={Nearest}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Search"
+          component={Search}
           options={{headerShown: false}}
         />
       </Stack.Navigator>
