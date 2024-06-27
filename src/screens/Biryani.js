@@ -15,20 +15,42 @@ import Geolocation from '@react-native-community/geolocation';
 import BASE_URI from '../../android/config.url';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
-const Biryani = ({route}) => {
-  const textb = route.params;
-  const [text, settext] = useState('');
-  const {width, height} = Dimensions.get('window');
-  const navigation = useNavigation();
+import Loader from '../components/loader';
 
+const Biryani = ({route}) => {
+  // const images = [require('../assets/pizza.png')];
+
+  const textb = route.params;
+  const [heroImage, setHeroImage] = useState(require('../assets/Dish.png'));
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const {width, height} = Dimensions.get('window');
+  const [emptyMessage, setEmptyMessage] = useState('');
+  const navigation = useNavigation();
+  const imageFunction = () => {
+    if (textb === 'Biryani') {
+      setHeroImage(require('../assets/Dish.png'));
+    } else if (textb === 'Burger') {
+      setHeroImage(require('../assets/dish2.png'));
+    } else if (textb === 'shawarma') {
+      setHeroImage(require('../assets/dish2.png'));
+    } else if (textb === 'Rolls') {
+      setHeroImage(require('../assets/dish2.png'));
+    } else if (textb === 'pizza') {
+      setHeroImage(require('../assets/dish2.png'));
+    } else if (textb === 'chinese') {
+      setHeroImage(require('../assets/dish2.png'));
+    }
+  };
   const getRestaurantsWithLocation = () => {
-    settext(textb);
-    console.log(text);
+    setLoading(true);
     Geolocation.getCurrentPosition(
-      position => {
+      async position => {
         const latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
-        mapFunction(latitude, longitude); // Call function to fetch restaurants with obtained location
+
+        await mapFunction(latitude, longitude); // Call function to fetch restaurants with obtained location
+        setLoading(false);
       },
       error => {
         console.error('Error getting location:', error);
@@ -42,7 +64,7 @@ const Biryani = ({route}) => {
     const token = await AsyncStorage.getItem('token');
     await axios({
       method: 'GET',
-      url: `${BASE_URI}/api/restaurant/category/${latitude}/${longitude}/${food}`,
+      url: `${BASE_URI}/api/restaurant/category/${latitude}/${longitude}/${textb}`,
       headers: {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + token,
@@ -50,16 +72,27 @@ const Biryani = ({route}) => {
     }).then(
       res => {
         console.log(res.data);
+
+        setData(res.data.data);
       },
       err => {
         const error = err.response.data.message;
+        if (
+          error === 'Restaurants not found with this category in your location!'
+        ) {
+          setEmptyMessage(
+            'Restaurants not found with this category in your location!',
+          );
+        }
         console.log(error);
       },
     );
   };
+
   useEffect(() => {
+    imageFunction();
     getRestaurantsWithLocation();
-  }, [text]);
+  }, []);
   const render = ({item}) => (
     <View style={Styles.itemcover}>
       <Image
@@ -73,7 +106,7 @@ const Biryani = ({route}) => {
           fontSize: 11,
           fontWeight: '400',
         }}>
-        Karim's Restaurant
+        {item.restaurant_name}
       </Text>
       <View
         style={{
@@ -84,13 +117,15 @@ const Biryani = ({route}) => {
         }}></View>
       <View style={{flexDirection: 'row', marginTop: 10, left: -40}}>
         <View style={Styles.rating}>
-          <Text style={{color: 'white', fontSize: 7}}>4.4</Text>
+          <Text style={{color: 'white', fontSize: 7}}>{item.avg_rating}</Text>
           <Image
             source={require('../assets/star.png')}
             style={{width: 7, height: 6}}
           />
         </View>
-        <Text style={{fontSize: 11, fontWeight: '300'}}>10-25 mins</Text>
+        <Text style={{fontSize: 11, fontWeight: '300'}}>
+          {item.delivery_time}
+        </Text>
       </View>
       <View style={{marginTop: 15}}>
         <Text style={{fontSize: 11, fontWeight: '300'}}>
@@ -112,10 +147,10 @@ const Biryani = ({route}) => {
             />
           </TouchableOpacity>
 
-          <Text style={Styles.text}>{text}</Text>
+          <Text style={Styles.text}>{textb}</Text>
 
           <Image
-            source={require('../assets/Dish.png')}
+            source={heroImage}
             style={{
               height: height * 0.25,
               width: width * 0.2,
@@ -131,46 +166,60 @@ const Biryani = ({route}) => {
           </Text>
         </View>
       </View>
-      <View
-        style={{
-          flexDirection: 'row',
-          borderBottomWidth: 1,
-          borderStyle: 'dashed',
-          borderColor: '#D6D6D6',
-        }}>
-        <TouchableOpacity style={Styles.filter}>
-          <Text style={{fontSize: 12}}>filter</Text>
-          <Image
-            source={require('../assets/filter.png')}
-            style={{width: 10, height: 10}}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity style={Styles.filter}>
-          <Text style={{fontSize: 12}}>Sort By</Text>
-          <Image
-            source={require('../assets/arrow3.png')}
-            style={{width: 5, height: 10}}
-          />
-        </TouchableOpacity>
-      </View>
-      <View style={Styles.dottedLine}></View>
 
-      <View>
-        <FlatList
-          numColumns={2}
-          data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 9, 9, 9]}
-          renderItem={render}
-          contentContainerStyle={Styles.listContent}
-          showsHorizontalScrollIndicator={false}
-          ListHeaderComponent={
-            <>
-              <View style={Styles.restaurantbox}>
-                <Text style={Styles.restaurant}>Restaurants for Biryani</Text>
-              </View>
-            </>
-          }
-        />
-      </View>
+      {loading ? (
+        <Loader />
+      ) : (
+        <>
+          <View
+            style={{
+              flexDirection: 'row',
+              borderBottomWidth: 1,
+              borderStyle: 'dashed',
+              borderColor: '#D6D6D6',
+            }}>
+            <TouchableOpacity style={Styles.filter}>
+              <Text style={{fontSize: 12, color: 'black'}}>filter</Text>
+              <Image
+                source={require('../assets/filter.png')}
+                style={{width: 10, height: 10}}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={Styles.filter}>
+              <Text style={{fontSize: 12, color: 'black'}}>Sort By</Text>
+              <Image
+                source={require('../assets/arrow3.png')}
+                style={{width: 5, height: 10}}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={Styles.dottedLine}></View>
+
+          <View>
+            <FlatList
+              numColumns={2}
+              data={data}
+              renderItem={render}
+              contentContainerStyle={Styles.listContent}
+              showsHorizontalScrollIndicator={false}
+              ListHeaderComponent={
+                <>
+                  <View style={Styles.restaurantbox}>
+                    {emptyMessage ? (
+                      <Text style={{color: 'black'}}>{emptyMessage}</Text>
+                    ) : (
+                      <Text style={Styles.restaurant}>
+                        Restaurants for {textb}
+                      </Text>
+                    )}
+                  </View>
+                </>
+              }
+            />
+          </View>
+        </>
+      )}
     </View>
   );
 };
@@ -225,6 +274,7 @@ const Styles = StyleSheet.create({
   restaurant: {
     fontSize: 20,
     fontWeight: '400',
+    color: 'black',
   },
   restaurantbox: {
     marginTop: 10,

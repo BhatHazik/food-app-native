@@ -18,7 +18,7 @@ import {OtpInput} from 'react-native-otp-entry';
 import BASE_URI from '../../android/config.url';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import MapView from 'react-native-maps';
+
 const {width, height} = Dimensions.get('window');
 const CodeScreen = Data => {
   const navigation4 = useNavigation();

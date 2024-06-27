@@ -22,14 +22,23 @@ import {
 
 import BASE_URI from '../../android/config.url';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import MapView from 'react-native-maps';
+
+import Loader from '../components/loader';
 
 const {width, height} = Dimensions.get('window');
+
 const Dining = () => {
   const [restautrants, setRestaurants] = useState([]);
-
+  const [topRated, setToprated] = useState([]);
+  const [Popular, setPopular] = useState([]);
+  const [emptyMessage, setEmptyMessage] = useState('');
   const [food, setfood] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [address, setAddress] = useState(null);
   const navigation = useNavigation();
+
+  // const VITE_MAP_TOKEN =
+  //   'pk.eyJ1IjoiYWJpZG1hcWJvb2wxMjMiLCJhIjoiY2x4NjdubnQ0MG84eDJrc2NydDV0NjNjcyJ9.s-JhY8R9FmqOT-FqjmI5og';
 
   // const data = ['', '', '', '', '', ''];
   // const [location, setLocation] = useState({latitude: null, longitude: null});
@@ -82,19 +91,101 @@ const Dining = () => {
       navigation.navigate('LoadingPage');
     }
   };
+  const toprated = async (latitude, longitude) => {
+    console.log('ok', latitude, longitude);
+    const token = await AsyncStorage.getItem('token');
+    console.log('token saved');
+    if (token) {
+      await axios({
+        method: 'GET',
+        url: `${BASE_URI}/api/restaurant/topRated/${latitude}/${longitude}`,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token,
+        },
+      }).then(
+        res => {
+          setToprated(res.data.data.slice(0, 8));
+          console.log(res.data.data);
+        },
+        err => {
+          console.log(err.response.data.message);
+          if (
+            err.response.data.message ===
+            'Restaurants not found in your location with ratings above 4.0'
+          ) {
+            setEmptyMessage(
+              `Restaurants not found in your location \n       with ratings above 4.0`,
+            );
+          }
+        },
+      );
+    } else {
+      console.log('Not authorized');
+      navigation.navigate('LoadingPage');
+    }
+  };
 
-  const getRestaurantsWithLocation = () => {
+  const popular = async (latitude, longitude) => {
+    console.log('ok', latitude, longitude);
+    const token = await AsyncStorage.getItem('token');
+    console.log('token saved');
+    if (token) {
+      await axios({
+        method: 'GET',
+        url: `${BASE_URI}/api/restaurant/popular/${latitude}/${longitude}`,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token,
+        },
+      }).then(
+        res => {
+          setPopular(res.data.data.slice(0, 8));
+          console.log(res.data.data);
+        },
+        err => {
+          console.log(err.response.data.message);
+        },
+      );
+    } else {
+      console.log('Not authorized');
+      navigation.navigate('LoadingPage');
+    }
+  };
+
+  const getRestaurantsWithLocation = async () => {
+    setLoading(true);
     Geolocation.getCurrentPosition(
-      position => {
+      async position => {
         var latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
-        getRestaurants(latitude, longitude); // Call function to fetch restaurants with obtained location
+        await getRestaurants(latitude, longitude);
+        await toprated(latitude, longitude);
+        await popular(latitude, longitude); // Call function to fetch restaurants with obtained location
+        getAddressFromCoordinates(latitude, longitude);
+        setLoading(false);
       },
       error => {
         console.error('Error getting location:', error);
       },
       {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
     );
+  };
+  const accessToken = `pk.ea008d8c047df0626596d547069f4861`;
+  const getAddressFromCoordinates = async (latitude, longitude) => {
+    try {
+      const response = await axios.get(
+        `https://us1.locationiq.com/v1/reverse?key=${accessToken}&lat=${latitude}&lon=${longitude}&format=json`,
+      );
+      setAddress(
+        response.data.address.road ||
+          response.data.address.suburb + ' ' + response.data.address.postcode,
+      );
+      console.log(response.data.address);
+    } catch (error) {
+      console.error(error);
+      setAddress('Error occured');
+    }
   };
 
   useEffect(() => {
@@ -112,7 +203,9 @@ const Dining = () => {
   //   </View>
   // );
   const renderItem2 = ({item}) => (
-    <View style={Styles.itemcover}>
+    <TouchableOpacity
+      style={Styles.itemcover}
+      onPress={() => navigation.navigate('Restaurant')}>
       <Image
         source={require('../assets/cover.png')}
         style={Styles.coverimage}
@@ -141,19 +234,19 @@ const Dining = () => {
             style={{width: 12, height: 11}}
           />
         </View>
-        <Text style={{fontSize: 16, fontWeight: '300'}}>
+        <Text style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
           {item.delivery_time}
         </Text>
       </View>
       <View style={{marginTop: 15, left: -15}}>
-        <Text style={{fontSize: 16, fontWeight: '300'}}>
+        <Text style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
           Wazwan, Fast food, Indian...
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
   const renderItem4 = ({item}) => (
-    <View style={Styles.itemcover}>
+    <TouchableOpacity style={Styles.itemcover}>
       <Image
         source={require('../assets/cover.png')}
         style={Styles.coverimage}
@@ -165,7 +258,7 @@ const Dining = () => {
           fontSize: 20,
           fontWeight: '400',
         }}>
-        Karim's Restaurant
+        {item.restaurant_name}
       </Text>
       <View
         style={{
@@ -176,23 +269,25 @@ const Dining = () => {
         }}></View>
       <View style={{flexDirection: 'row', marginTop: 10, left: -40}}>
         <View style={Styles.rating}>
-          <Text style={{color: 'white'}}>4.4</Text>
+          <Text style={{color: 'white'}}>{item.avg_rating}</Text>
           <Image
             source={require('../assets/star.png')}
             style={{width: 12, height: 11}}
           />
         </View>
-        <Text style={{fontSize: 16, fontWeight: '300'}}>10-25 mins</Text>
+        <Text style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
+          {item.delivery_time}
+        </Text>
       </View>
       <View style={{marginTop: 15, left: -15}}>
-        <Text style={{fontSize: 16, fontWeight: '300'}}>
+        <Text style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
           Wazwan, Fast food, Indian...
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
   const renderItem3 = ({item}) => (
-    <View style={Styles.itemcover2}>
+    <TouchableOpacity style={Styles.itemcover2}>
       <Image
         source={require('../assets/cover.png')}
         style={Styles.coverimage}
@@ -204,7 +299,7 @@ const Dining = () => {
           fontSize: 20,
           fontWeight: '400',
         }}>
-        Karim's Restaurant
+        {item.restaurant_name}
       </Text>
       <View
         style={{
@@ -215,14 +310,14 @@ const Dining = () => {
         }}></View>
       <View style={{flexDirection: 'row', marginTop: 10, left: -40}}>
         <View style={Styles.rating}>
-          <Text style={{color: 'white'}}>4.4</Text>
+          <Text style={{color: 'white'}}>{item.avg_rating}</Text>
           <Image
             source={require('../assets/star.png')}
             style={{width: 12, height: 11}}
           />
         </View>
         <Text style={{fontSize: 16, fontWeight: '300', color: 'white'}}>
-          10-25 mins
+          {item.delivery_time}
         </Text>
       </View>
       <View style={{marginTop: 15, left: -15}}>
@@ -230,31 +325,37 @@ const Dining = () => {
           Wazwan, Fast food, Indian...
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <View style={{flex: 1, backgroundColor: 'white'}}>
         <View style={Styles.header}>
           <View style={{flexDirection: 'row'}}>
-            <TouchableOpacity style={{margin: 20, marginLeft: 40}}>
+            <TouchableOpacity
+              style={{margin: 20, marginLeft: 40}}
+              onPress={() => navigation.navigate('Address')}>
               <Image
                 source={require('../assets/nav.png')}
                 style={{height: 16, width: 21}}
               />
             </TouchableOpacity>
-            <View>
-              <Text
-                style={{
-                  color: 'white',
-                  marginTop: 10,
-                  fontSize: 16,
-                  fontWeight: '700',
-                }}>
-                Kursu, Rajbagh{'\n'}
-                190008
-              </Text>
-            </View>
+            {address && (
+              <View>
+                <Text
+                  style={{
+                    color: 'white',
+                    marginTop: 10,
+                    fontSize: 16,
+                    fontWeight: '700',
+                    position: 'static',
+                  }}>
+                  {address && address}
+                  {/* Kursu, Rajbagh{'\n'}
+                190008 */}
+                </Text>
+              </View>
+            )}
             <Image
               source={require('../assets/arrow.png')}
               style={Styles.arrow}
@@ -281,122 +382,99 @@ const Dining = () => {
             </View>
           </View>
         </View>
-        <View style={{marginRight: 16, marginLeft: 16}}>
-          {/* <FlatList
+        {loading ? (
+          <Loader style={Styles.Loader} />
+        ) : (
+          <View style={{marginRight: 16, marginLeft: 16}}>
+            {/* <FlatList
             data={images}
             renderItem={renderItem}
             horizontal={true}
             showsHorizontalScrollIndicator={false}
           /> */}
-          <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-            <View style={{flexDirection: 'row'}}>
+            <ScrollView
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}>
+              <View style={{flexDirection: 'row'}}>
+                <TouchableOpacity
+                  onPress={() => {
+                    navigation.navigate('Biryani', 'Biryani');
+                  }}>
+                  <Image
+                    source={require('../assets/Biryani.png')}
+                    style={Styles.items}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    navigation.navigate('Biryani', 'Burger');
+                  }}>
+                  <Image
+                    source={require('../assets/Burger.png')}
+                    style={Styles.items}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    navigation.navigate('Biryani', 'shawarma');
+                  }}>
+                  <Image
+                    source={require('../assets/shawarma.png')}
+                    style={Styles.items}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    navigation.navigate('Biryani', 'Rolls');
+                  }}>
+                  <Image
+                    source={require('../assets/Rolls.png')}
+                    style={Styles.items}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    navigation.navigate('Biryani', 'pizza');
+                  }}>
+                  <Image
+                    source={require('../assets/pizza.png')}
+                    style={Styles.items}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    navigation.navigate('Biryani', 'chinese');
+                  }}>
+                  <Image
+                    source={require('../assets/chinese.png')}
+                    style={Styles.items}
+                  />
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+            <View style={Styles.viewcontainer}>
+              <Text style={{fontSize: 20, fontWeight: '600', color: 'black'}}>
+                Nearest
+              </Text>
               <TouchableOpacity
-                onPress={() => {
-                  setfood('Biryani'), navigation.navigate('Biryani', food);
-                }}>
+                onPress={() => navigation.navigate('Nearest')}
+                style={{flexDirection: 'row', marginTop: 2}}>
+                <Text style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
+                  View All
+                </Text>
                 <Image
-                  source={require('../assets/Biryani.png')}
-                  style={Styles.items}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  setfood('Burger'), navigation.navigate('Biryani', food);
-                }}>
-                <Image
-                  source={require('../assets/Burger.png')}
-                  style={Styles.items}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  setfood('shawarma'), navigation.navigate('Biryani', food);
-                }}>
-                <Image
-                  source={require('../assets/shawarma.png')}
-                  style={Styles.items}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  setfood('Rolls'), navigation.navigate('Biryani', food);
-                }}>
-                <Image
-                  source={require('../assets/Rolls.png')}
-                  style={Styles.items}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  setfood('pizza'), navigation.navigate('Biryani', food);
-                }}>
-                <Image
-                  source={require('../assets/pizza.png')}
-                  style={Styles.items}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  setfood('chinese'), navigation.navigate('Biryani', food);
-                }}>
-                <Image
-                  source={require('../assets/chinese.png')}
-                  style={Styles.items}
+                  source={require('../assets/arrow2.png')}
+                  style={Styles.arrow2}
                 />
               </TouchableOpacity>
             </View>
-          </ScrollView>
-          <View style={Styles.viewcontainer}>
-            <Text style={{fontSize: 20, fontWeight: '600', color: 'black'}}>
-              Nearest
-            </Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Nearest')}
-              style={{flexDirection: 'row', marginTop: 2}}>
-              <Text style={{fontSize: 16, fontWeight: '300'}}>View All</Text>
-              <Image
-                source={require('../assets/arrow2.png')}
-                style={Styles.arrow2}
-              />
-            </TouchableOpacity>
-          </View>
 
-          <View>
-            <FlatList
-              data={restautrants}
-              renderItem={renderItem2}
-              horizontal={true}
-              keyExtractor={item => item.id}
-              showsHorizontalScrollIndicator={false}
-            />
-          </View>
-          <View style={Styles.viewcontainer}>
-            <Text
-              style={{
-                fontSize: 20,
-                fontWeight: '600',
-                marginTop: 20,
-                color: 'black',
-              }}>
-              Top Rated
-            </Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Toprated')}
-              style={{flexDirection: 'row', marginTop: 22}}>
-              <Text style={{fontSize: 16, fontWeight: '300'}}>View All</Text>
-              <Image
-                source={require('../assets/arrow2.png')}
-                style={Styles.arrow2}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <View>
             <View>
               <FlatList
-                data={[1, 2, 3, 4, 5]}
-                renderItem={renderItem4}
+                data={restautrants}
+                renderItem={renderItem2}
                 horizontal={true}
+                keyExtractor={item => item.id}
                 showsHorizontalScrollIndicator={false}
               />
             </View>
@@ -406,31 +484,92 @@ const Dining = () => {
                   fontSize: 20,
                   fontWeight: '600',
                   marginTop: 20,
-                  marginBottom: 5,
                   color: 'black',
                 }}>
-                Popular Brands
+                Top Rated
               </Text>
               <TouchableOpacity
-                onPress={() => navigation.navigate('Popular')}
-                style={{flexDirection: 'row', marginTop: 22, marginBottom: 5}}>
-                <Text style={{fontSize: 16, fontWeight: '300'}}>View All</Text>
+                onPress={() => navigation.navigate('Toprated')}
+                style={{flexDirection: 'row', marginTop: 22}}>
+                <Text style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
+                  View All
+                </Text>
                 <Image
                   source={require('../assets/arrow2.png')}
                   style={Styles.arrow2}
                 />
               </TouchableOpacity>
             </View>
-            <View style={Styles.bigcontainer}>
-              <FlatList
-                data={[1, 2, 3, 4, 5]}
-                renderItem={renderItem3}
-                horizontal={true}
-                showsHorizontalScrollIndicator={false}
-              />
+
+            <View>
+              <View>
+                {emptyMessage && (
+                  <View
+                    style={{
+                      backgroundColor: 'grey',
+                      width: width * 0.92,
+                      height: height * 0.15,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      borderRadius: 20,
+                      marginTop: 20,
+                      alignContent: 'center',
+                    }}>
+                    <Text
+                      style={{
+                        color: 'white',
+                      }}>
+                      {emptyMessage}
+                    </Text>
+                  </View>
+                )}
+
+                <FlatList
+                  data={topRated}
+                  renderItem={renderItem4}
+                  horizontal={true}
+                  showsHorizontalScrollIndicator={false}
+                />
+              </View>
+              <View style={Styles.viewcontainer}>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: '600',
+                    marginTop: 20,
+                    marginBottom: 5,
+                    color: 'black',
+                  }}>
+                  Popular Brands
+                </Text>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('Popular')}
+                  style={{
+                    flexDirection: 'row',
+                    marginTop: 22,
+                    marginBottom: 5,
+                  }}>
+                  <Text
+                    style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
+                    View All
+                  </Text>
+                  <Image
+                    source={require('../assets/arrow2.png')}
+                    style={Styles.arrow2}
+                  />
+                </TouchableOpacity>
+              </View>
+              <View style={Styles.bigcontainer}>
+                <FlatList
+                  data={Popular}
+                  renderItem={renderItem3}
+                  horizontal={true}
+                  showsHorizontalScrollIndicator={false}
+                />
+              </View>
             </View>
           </View>
-        </View>
+        )}
       </View>
     </ScrollView>
   );
@@ -455,6 +594,8 @@ const Styles = StyleSheet.create({
     width: 50,
     marginLeft: 110,
     marginTop: 12,
+    position: 'static',
+    right: width * 0.13,
   },
   text1: {
     color: 'white',
@@ -554,5 +695,9 @@ const Styles = StyleSheet.create({
   },
   opacity: {
     backgroundColor: 'white',
+  },
+  Loader: {
+    position: 'static',
+    top: '188px',
   },
 });

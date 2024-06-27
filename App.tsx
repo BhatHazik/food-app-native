@@ -13,6 +13,9 @@ import Popular from './src/screens/Popular';
 import Biryani from './src/screens/Biryani';
 import Nearest from './src/screens/Nearest';
 import Search from './src/screens/search';
+import Address from './src/screens/Address';
+import MapScreen from './src/screens/MapScreen';
+import Restaurant from './src/screens/Restaurant';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -23,6 +26,11 @@ const App = () => {
         <Stack.Screen
           name="Dashboard"
           component={Dashboard}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Address"
+          component={Address}
           options={{headerShown: false}}
         />
         <Stack.Screen
@@ -70,6 +78,16 @@ const App = () => {
         <Stack.Screen
           name="Search"
           component={Search}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="MapScreen"
+          component={MapScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Restaurant"
+          component={Restaurant}
           options={{headerShown: false}}
         />
       </Stack.Navigator>

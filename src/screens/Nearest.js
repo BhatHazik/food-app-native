@@ -13,16 +13,18 @@ import {
 import axios from 'axios';
 import BASE_URI from '../../android/config.url';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import Loader from '../components/loader';
 const Nearest = () => {
   const [restautrants, setRestaurants] = useState([]);
-
+  const [loading, setLoading] = useState(false);
   const getRestaurantsWithLocation = () => {
+    setLoading(true);
     Geolocation.getCurrentPosition(
-      position => {
+      async position => {
         const latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
-        mapFunction(latitude, longitude); // Call function to fetch restaurants with obtained location
+        await mapFunction(latitude, longitude); // Call function to fetch restaurants with obtained location
+        setLoading(false);
       },
       error => {
         console.error('Error getting location:', error);
@@ -85,12 +87,12 @@ const Nearest = () => {
             style={{width: 7, height: 6}}
           />
         </View>
-        <Text style={{fontSize: 11, fontWeight: '300'}}>
+        <Text style={{fontSize: 11, fontWeight: '300', color: 'black'}}>
           {item.delivery_time}
         </Text>
       </View>
       <View style={{marginTop: 15}}>
-        <Text style={{fontSize: 11, fontWeight: '300'}}>
+        <Text style={{fontSize: 11, fontWeight: '300', color: 'black'}}>
           Wazwan, Fast food, Indian...
         </Text>
       </View>
@@ -107,18 +109,24 @@ const Nearest = () => {
           marginLeft: 16,
           color: 'black',
         }}>
-        Top Rated
+        Nearest
       </Text>
-      <View>
-        <FlatList
-          numColumns={2}
-          data={restautrants}
-          renderItem={render}
-          keyExtractor={item => item.id}
-          contentContainerStyle={Styles.listContent}
-          showsHorizontalScrollIndicator={false}
-        />
-      </View>
+      {loading ? (
+        <Loader />
+      ) : (
+        <>
+          <View>
+            <FlatList
+              numColumns={2}
+              data={restautrants}
+              renderItem={render}
+              keyExtractor={item => item.id}
+              contentContainerStyle={Styles.listContent}
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
+        </>
+      )}
     </View>
   );
 };

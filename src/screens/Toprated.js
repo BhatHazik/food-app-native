@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   FlatList,
   Image,
@@ -9,23 +9,56 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import BASE_URI from '../../android/config.url';
+import Geolocation from '@react-native-community/geolocation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import Loader from '../components/loader';
+
 const Toprated = () => {
-  const mapFunction = async () => {
+  const [restautrants, setRestaurants] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const getRestaurantsWithLocation = () => {
+    setLoading(true);
+    Geolocation.getCurrentPosition(
+      async position => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        await mapFunction(latitude, longitude);
+        setLoading(false);
+        // Call function to fetch restaurants with obtained location
+      },
+      error => {
+        console.error('Error getting location:', error);
+      },
+      {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
+    );
+  };
+
+  const mapFunction = async (latitude, longitude) => {
+    const token = await AsyncStorage.getItem('token');
     await axios({
       method: 'GET',
-      url: `${BASE_URI}/api/restaurant/`,
+      url: `${BASE_URI}/api/restaurant/topRated/${latitude}/${longitude}`,
       headers: {
         'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token,
       },
     }).then(
       res => {
         console.log(res.data);
+        setRestaurants(res.data.data);
+        console.log(restautrants);
       },
       err => {
-        console.log(err);
+        console.log(err.response.data.message);
       },
     );
   };
+
+  useEffect(() => {
+    getRestaurantsWithLocation();
+  }, []);
   const render = ({item}) => (
     <View style={Styles.itemcover}>
       <Image
@@ -39,7 +72,7 @@ const Toprated = () => {
           fontSize: 11,
           fontWeight: '400',
         }}>
-        Karim's Restaurant
+        {item.restaurant_name}
       </Text>
       <View
         style={{
@@ -50,13 +83,15 @@ const Toprated = () => {
         }}></View>
       <View style={{flexDirection: 'row', marginTop: 10, left: -40}}>
         <View style={Styles.rating}>
-          <Text style={{color: 'white', fontSize: 7}}>4.4</Text>
+          <Text style={{color: 'white', fontSize: 7}}>{item.avg_rating}</Text>
           <Image
             source={require('../assets/star.png')}
             style={{width: 7, height: 6}}
           />
         </View>
-        <Text style={{fontSize: 11, fontWeight: '300'}}>10-25 mins</Text>
+        <Text style={{fontSize: 11, fontWeight: '300', color: 'black'}}>
+          {item.delivery_time}
+        </Text>
       </View>
       <View style={{marginTop: 15}}>
         <Text style={{fontSize: 11, fontWeight: '300'}}>
@@ -78,15 +113,21 @@ const Toprated = () => {
         }}>
         Top Rated
       </Text>
-      <View>
-        <FlatList
-          numColumns={2}
-          data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 9, 9, 9]}
-          renderItem={render}
-          contentContainerStyle={Styles.listContent}
-          showsHorizontalScrollIndicator={false}
-        />
-      </View>
+      {loading ? (
+        <Loader />
+      ) : (
+        <>
+          <View>
+            <FlatList
+              numColumns={2}
+              data={restautrants}
+              renderItem={render}
+              contentContainerStyle={Styles.listContent}
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
+        </>
+      )}
     </View>
   );
 };
