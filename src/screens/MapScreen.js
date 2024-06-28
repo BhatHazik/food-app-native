@@ -172,7 +172,9 @@ const MapScreen = () => {
                 }>
                 Kursoo Rajbagh{' '}
               </Text>
-              <Text style={popup ? {color: 'white'} : null}>Srinagar</Text>
+              <Text style={popup ? {color: 'white'} : {color: 'black'}}>
+                Srinagar
+              </Text>
             </View>
           </TouchableOpacity>
           {!popup && (
@@ -238,7 +240,7 @@ const MapScreen = () => {
           style={popup ? Styles.darkButton : Styles.button}
           onPress={handlePopup}>
           <Text style={{color: 'white', fontSize: 18, fontWeight: '400'}}>
-            Enter more address details{' '}
+            {popup ? 'Submit' : 'Enter more address details'}
           </Text>
         </TouchableOpacity>
       </Animated.View>
@@ -323,8 +325,8 @@ const Styles = StyleSheet.create({
     bottom: 20,
   },
   darkButton: {
-    width: '70%',
-    height: 50,
+    width: '50%',
+    height: 40,
     backgroundColor: '#FA4A0C',
     borderRadius: 10,
     justifyContent: 'center',

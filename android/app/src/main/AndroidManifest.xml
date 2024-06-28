@@ -15,7 +15,7 @@ package="com.foodapp">
       android:theme="@style/AppTheme">
       <meta-data
      android:name="com.google.android.geo.API_KEY"
-     android:value="api key is not here it is in our pocket"/>
+     android:value="AIzaSyB77RLDWk3eX_48GZQcHgYzXXN_VznBq_k"/>
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"

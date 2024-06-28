@@ -32,7 +32,8 @@ const Dining = () => {
   const [topRated, setToprated] = useState([]);
   const [Popular, setPopular] = useState([]);
   const [emptyMessage, setEmptyMessage] = useState('');
-  const [food, setfood] = useState('');
+  const [Latitude, setLatitude] = useState('');
+  const [Longitude, setLongitude] = useState('');
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState(null);
   const navigation = useNavigation();
@@ -158,7 +159,9 @@ const Dining = () => {
     Geolocation.getCurrentPosition(
       async position => {
         var latitude = position.coords.latitude;
+        setLatitude(Latitude);
         const longitude = position.coords.longitude;
+        setLongitude(Longitude);
         await getRestaurants(latitude, longitude);
         await toprated(latitude, longitude);
         await popular(latitude, longitude); // Call function to fetch restaurants with obtained location
@@ -171,6 +174,7 @@ const Dining = () => {
       {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
     );
   };
+
   const accessToken = `pk.ea008d8c047df0626596d547069f4861`;
   const getAddressFromCoordinates = async (latitude, longitude) => {
     try {
@@ -340,32 +344,35 @@ const Dining = () => {
                 style={{height: 16, width: 21}}
               />
             </TouchableOpacity>
-            {address && (
-              <View>
-                <Text
-                  style={{
-                    color: 'white',
-                    marginTop: 10,
-                    fontSize: 16,
-                    fontWeight: '700',
-                    position: 'static',
-                  }}>
-                  {address && address}
-                  {/* Kursu, Rajbagh{'\n'}
+            <View style={{flexDirection: 'row'}}>
+              <TouchableOpacity
+                style={{flexDirection: 'row', marginHorizontal: -3}}>
+                {address && (
+                  <Text
+                    style={{
+                      color: 'white',
+                      marginTop: 10,
+                      fontSize: 16,
+                      fontWeight: '700',
+                      position: 'static',
+                    }}>
+                    {address && address}
+                    {/* Kursu, Rajbagh{'\n'}
                 190008 */}
-                </Text>
-              </View>
-            )}
-            <Image
-              source={require('../assets/arrow.png')}
-              style={Styles.arrow}
-            />
-            <TouchableOpacity>
-              <Image
-                source={require('../assets/logo.png')}
-                style={Styles.logo}
-              />
-            </TouchableOpacity>
+                  </Text>
+                )}
+                <Image
+                  source={require('../assets/arrow.png')}
+                  style={Styles.arrow}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <Image
+                  source={require('../assets/logo.png')}
+                  style={Styles.logo}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
           <View style={{justifyContent: 'center', alignItems: 'center'}}>
             <Text style={Styles.text1}>
@@ -592,10 +599,8 @@ const Styles = StyleSheet.create({
   logo: {
     height: 50,
     width: 50,
-    marginLeft: 110,
+    marginHorizontal: width * 0.15,
     marginTop: 12,
-    position: 'static',
-    right: width * 0.13,
   },
   text1: {
     color: 'white',

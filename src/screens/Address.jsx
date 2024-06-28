@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 
 const {width, height} = Dimensions.get('window');
-const Address = () => {
+const Address = Latitude => {
+  console.log(Latitude);
   const navigation = useNavigation();
   return (
     <View style={{flex: 1, backgroundColor: 'white'}}>
