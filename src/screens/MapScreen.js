@@ -9,8 +9,10 @@ import {
   TextInput,
   Dimensions,
   Animated,
+  FlatList,
 } from 'react-native';
 import GoogleMapScreen from '../../src/screens/map';
+import axios from 'axios';
 
 const {width, height} = Dimensions.get('window');
 
@@ -18,15 +20,125 @@ const MapScreen = () => {
   const navigation = useNavigation();
   const [popup, setPopup] = useState(false);
   const [searchPopDown, SetSearchPopDown] = useState(false);
+  const [searchresults, setSearchReasult] = useState([]);
+  const [lastId, setLastId] = useState(0);
+  const [cordinates, setCordinates] = useState({});
+  const [address, setAddress] = useState(null);
+
+  const handleAddressUpdate = newAddress => {
+    setAddress(newAddress);
+    console.log(address, 'this is parent components data');
+  };
+  // const [locationDetails, setLocationDetails] = useState(null);
+
+  // const fetchLocationDetails = async text => {
+  //   const apiKey = 'AIzaSyB77RLDWk3eX_48GZQcHgYzXXN_VznBq_k';
+  //   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+  //     text,
+  //   )}&key=${apiKey}`;
+
+  //   await axios
+  //     .get(url)
+  //     .then(
+  //       response => {
+  //         console.log(response);
+  //         if (response.data.status === 'OK') {
+  //           setLocationDetails(response.data.results[0]);
+  //           console.log(locationDetails);
+  //         } else {
+  //           console.error(
+  //             'Error fetching location details:',
+  //             response.data.status,
+  //           );
+  //         }
+  //       },
+  //       err => {
+  //         console.log(err);
+  //       },
+  //     )
+  //     .catch(error => {
+  //       console.error('Error fetching location details:', error);
+  //     });
+  // };
 
   const footerHeight = useRef(new Animated.Value(height * 0.28)).current;
   const footerBackgroundColor = useRef(new Animated.Value(0)).current;
+  const headerHeight = useRef(new Animated.Value(height * 0.2)).current;
+  const headerOpacity = useRef(new Animated.Value(1)).current;
+  const accessToken = `pk.ea008d8c047df0626596d547069f4861`;
+
+  const flatlist = ({item}) => (
+    <TouchableOpacity
+      style={{flexDirection: 'row'}}
+      onPress={() => {
+        // console.log(item.lat, item.lon);
+        setCordinates({lat: item.lat, lon: item.lon});
+        SetSearchPopDown(!searchPopDown);
+      }}>
+      <Image
+        source={require('../assets/dot.png')}
+        style={{height: 10, width: 10, margin: 16}}
+      />
+      <Text style={{color: 'white'}}>
+        {item.firstTwoWords}
+        {'\n'}
+        <Text style={{fontSize: 12, lineHeight: 20}}>
+          {item.stateName} {item.pincode}
+        </Text>
+      </Text>
+    </TouchableOpacity>
+  );
+  const getLatLongFromAddress = async text => {
+    try {
+      const response = await axios({
+        method: 'GET',
+        url: `https://us1.locationiq.com/v1/search?key=${accessToken}&q=${text}&format=json&`,
+      });
+
+      const locationData = response.data.map((item, index) => {
+        const nameParts = item.display_name.split(', ');
+        const firstTwoWords = nameParts.slice(0, 2).join(', ');
+        const pincode = nameParts[nameParts.length - 2];
+        const stateName = nameParts[nameParts.length - 3];
+
+        return {
+          id: lastId + index + 1, // Auto-incrementing ID
+          firstTwoWords: firstTwoWords,
+          pincode: pincode,
+          stateName: stateName,
+          lat: item.lat,
+          lon: item.lon,
+        };
+      });
+
+      setLastId(lastId + response.data.length); // Update lastId for future increments
+      setSearchReasult(locationData); // Store locations in state
+    } catch (error) {
+      console.error('Error fetching location details:', error);
+    }
+  };
+
+  useEffect(() => {
+    console.log(searchresults, 'Updated searchResults'); // This will log the state after it updates
+  }, [searchresults]);
 
   const handlePopup = () => {
     setPopup(!popup);
   };
   const handleSearchPopDown = () => {
-    setPopup(!searchPopDown);
+    SetSearchPopDown(!searchPopDown);
+  };
+  // const handleSearch = text => {
+  //   getLatLongFromAddress(text);
+  //   // fetchLocationDetails(text);
+  // };
+
+  const handleInputChange = text => {
+    if (text.length === 0) {
+      setSearchReasult([]); // Clear search results when input is cleared
+    } else if (text.length >= 3) {
+      getLatLongFromAddress(text); // Fetch data when input has at least 3 characters
+    }
   };
 
   useEffect(() => {
@@ -59,6 +171,36 @@ const MapScreen = () => {
     }
   }, [popup]);
 
+  useEffect(() => {
+    if (searchPopDown) {
+      Animated.parallel([
+        Animated.timing(headerHeight, {
+          toValue: height * 2,
+          duration: 600,
+          useNativeDriver: false,
+        }),
+        Animated.timing(headerOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: false,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(headerHeight, {
+          toValue: height * 0.2,
+          duration: 400,
+          useNativeDriver: false,
+        }),
+        Animated.timing(headerOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: false,
+        }),
+      ]).start();
+    }
+  }, [searchPopDown]);
+
   const backgroundColor = footerBackgroundColor.interpolate({
     inputRange: [0, 1],
     outputRange: ['white', '#202020'],
@@ -66,75 +208,74 @@ const MapScreen = () => {
 
   return (
     <View style={{flex: 1, backgroundColor: 'white'}}>
-      {searchPopDown ? (
-        <View style={Styles.header}>
+      <Animated.View
+        style={
+          popup
+            ? Styles.popDownHeader
+            : searchPopDown
+            ? [Styles.header, {height: headerHeight, opacity: headerOpacity}]
+            : [Styles.header, {height: headerHeight, opacity: headerOpacity}]
+        }>
+        <View>
+          <View style={Styles.title}>
+            <TouchableOpacity
+              style={Styles.arrow}
+              onPress={
+                searchPopDown ? handleSearchPopDown : () => navigation.goBack()
+              }>
+              <Image
+                source={require('../assets/Back.png')}
+                style={{width: 22, height: 20}}
+              />
+            </TouchableOpacity>
+            <Text style={Styles.headerText}>Search or Add new address</Text>
+          </View>
+          <TextInput
+            style={Styles.Searchinput}
+            placeholder="Search for area or street"
+            placeholderTextColor={'#FA4A0C'}
+            onPress={searchPopDown ? null : handleSearchPopDown}
+            onChangeText={handleInputChange}
+          />
+        </View>
+        {searchPopDown && (
           <View>
-            <View style={Styles.title}>
-              <TouchableOpacity
-                style={Styles.arrow}
-                onPress={() => navigation.goBack()}>
-                <Image
-                  source={require('../assets/Back.png')}
-                  style={{width: 22, height: 20}}
-                />
-              </TouchableOpacity>
-              <Text style={Styles.headerText}>Search or Add new address</Text>
-            </View>
-            <TextInput
-              style={Styles.Searchinput}
-              placeholder="Search for area or street"
-              placeholderTextColor={'#FA4A0C'}
+            <TouchableOpacity style={{flexDirection: 'row'}}>
+              <Image
+                source={require('../assets/nav.png')}
+                style={{height: 20, width: 26, margin: 25, marginLeft: 40}}
+              />
+              <Text style={{color: '#FA4A0C', margin: 20, fontSize: 20}}>
+                Use Current Location
+              </Text>
+            </TouchableOpacity>
+            <Text style={{color: 'white', marginHorizontal: 'auto'}}>
+              ....................................................................................
+            </Text>
+            <Text
+              style={{
+                color: 'white',
+                margin: 10,
+                fontSize: 20,
+                marginHorizontal: 40,
+              }}>
+              Search Results
+            </Text>
+            <FlatList
+              data={searchresults}
+              renderItem={flatlist}
+              keyExtractor={item => item.id.toString()}
             />
           </View>
-        </View>
-      ) : null}
-      {popup ? (
-        <View style={Styles.header}>
-          <View>
-            <View style={Styles.title}>
-              <TouchableOpacity
-                style={Styles.arrow}
-                onPress={() => navigation.goBack()}>
-                <Image
-                  source={require('../assets/Back.png')}
-                  style={{width: 22, height: 20}}
-                />
-              </TouchableOpacity>
-              <Text style={Styles.headerText}>Search or Add new address</Text>
-            </View>
-            <TextInput
-              style={Styles.Searchinput}
-              placeholder="Search for area or street"
-              placeholderTextColor={'#FA4A0C'}
-            />
-          </View>
-        </View>
-      ) : (
-        <View style={Styles.header}>
-          <View>
-            <View style={Styles.title}>
-              <TouchableOpacity
-                style={Styles.arrow}
-                onPress={() => navigation.goBack()}>
-                <Image
-                  source={require('../assets/Back.png')}
-                  style={{width: 22, height: 20}}
-                />
-              </TouchableOpacity>
-              <Text style={Styles.headerText}>Search or Add new address</Text>
-            </View>
-            <TextInput
-              style={Styles.Searchinput}
-              placeholder="Search for area or street"
-              placeholderTextColor={'#FA4A0C'}
-            />
-          </View>
-        </View>
-      )}
-      <View style={Styles.map}>
-        <GoogleMapScreen />
-      </View>
+        )}
+      </Animated.View>
 
+      <View style={Styles.map}>
+        <GoogleMapScreen
+          model={cordinates}
+          onAddressUpdate={handleAddressUpdate}
+        />
+      </View>
       <Animated.View
         style={[
           Styles.footer,
@@ -170,10 +311,12 @@ const MapScreen = () => {
                     ? {fontWeight: '600', color: 'white'}
                     : {fontWeight: '600', color: 'black'}
                 }>
-                Kursoo Rajbagh{' '}
+                {address.address.road ||
+                  address.address.suburb ||
+                  'Pin to Locate'}
               </Text>
               <Text style={popup ? {color: 'white'} : {color: 'black'}}>
-                Srinagar
+                {address.address.city}
               </Text>
             </View>
           </TouchableOpacity>
@@ -196,7 +339,7 @@ const MapScreen = () => {
               style={[Styles.input, {marginTop: 10}]}
               placeholder="House / Flat / Floor"
               placeholderTextColor={'#FFF'}
-              onPress={handleSearchPopDown}
+              onPress={handlePopup}
             />
             <TextInput
               style={Styles.input}
@@ -253,10 +396,19 @@ export default MapScreen;
 const Styles = StyleSheet.create({
   header: {
     width: '100%',
-    height: height * 0.2,
     backgroundColor: '#202020',
-    borderBottomRightRadius: 50,
-    borderBottomLeftRadius: 50,
+    height: height * 0.2,
+    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    zIndex: 1,
+  },
+  popDownHeader: {
+    display: 'none',
+  },
+  searchPopDown: {
+    width: '100%',
+    height: height * 1,
+    backgroundColor: 'blue',
     zIndex: 1,
   },
   title: {
@@ -292,8 +444,8 @@ const Styles = StyleSheet.create({
     width: width,
     position: 'absolute',
     bottom: 0,
-    borderTopRightRadius: 50,
-    borderTopLeftRadius: 50,
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20,
     padding: 20,
     borderColor: '#D6D6D6',
     borderWidth: 1,

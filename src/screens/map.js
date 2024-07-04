@@ -26,23 +26,34 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function GoogleMapScreen() {
+export default function GoogleMapScreen({onAddressUpdate, model}) {
+  console.log(model, 'this is model object');
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [address, setAddress] = useState(null);
 
   const getLocation = () => {
-    Geolocation.getCurrentPosition(
-      async position => {
-        const {latitude, longitude} = position.coords;
-        setLatitude(latitude);
-        setLongitude(longitude);
-      },
-      error => {
-        console.error('Error getting location:', error);
-      },
-      {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
-    );
+    if (model.lat && model.lon) {
+      console.log('Using model location');
+      setLatitude(parseFloat(model.lat));
+      setLongitude(parseFloat(model.lon));
+      console.log(latitude, longitude, 'model coordinates set');
+    } else {
+      console.log('Using device location');
+      Geolocation.getCurrentPosition(
+        async position => {
+          const latitude = position.coords.latitude;
+          setLatitude(latitude);
+          const longitude = position.coords.longitude;
+          setLongitude(longitude);
+          console.log(latitude, longitude, 'device coordinates set');
+        },
+        error => {
+          console.error('Error getting location:', error);
+        },
+        {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
+      );
+    }
   };
 
   const accessToken = `pk.ea008d8c047df0626596d547069f4861`;
@@ -51,20 +62,16 @@ export default function GoogleMapScreen() {
       const response = await axios.get(
         `https://us1.locationiq.com/v1/reverse?key=${accessToken}&lat=${latitude}&lon=${longitude}&format=json`,
       );
-      setAddress(
-        response.data.address.road ||
-          response.data.address.suburb + ' ' + response.data.address.postcode,
-      );
-      console.log(response.data);
+      setAddress(response.data);
     } catch (error) {
       console.error(error);
-      setAddress('Error occured');
+      setAddress('Error occurred');
     }
   };
 
   const handleMapPress = e => {
     const {latitude, longitude} = e.nativeEvent.coordinate;
-    console.log(latitude, longitude);
+    console.log(latitude, longitude, 'on map press');
     setLatitude(latitude);
     setLongitude(longitude);
     getAddressFromCoordinates(latitude, longitude);
@@ -72,7 +79,13 @@ export default function GoogleMapScreen() {
 
   useEffect(() => {
     getLocation();
-  }, []);
+  }, [model]);
+
+  useEffect(() => {
+    if (address) {
+      onAddressUpdate(address);
+    }
+  }, [address, onAddressUpdate]);
 
   return (
     <View style={styles.container}>
@@ -90,13 +103,6 @@ export default function GoogleMapScreen() {
           <Marker coordinate={{latitude, longitude}} title="Pinned Location" />
         )}
       </MapView>
-      {address && (
-        <View style={styles.addressContainer}>
-          <Text>Fetched Pinned Location:</Text>
-          <Text>{`Latitude: ${latitude}, Longitude: ${longitude}`}</Text>
-          <Text>{address}</Text>
-        </View>
-      )}
     </View>
   );
 }
