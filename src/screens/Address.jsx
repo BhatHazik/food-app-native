@@ -10,6 +10,7 @@ import {
   TextInput,
   Dimensions,
 } from 'react-native';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 
 const {width, height} = Dimensions.get('window');
 const Address = Latitude => {
@@ -23,17 +24,13 @@ const Address = Latitude => {
             <TouchableOpacity
               style={Styles.arrow}
               onPress={() => navigation.goBack()}>
-              <Image
-                source={require('../assets/Back.png')}
-                style={{width: 22, height: 20}}
-              />
+              <AntDesign name="arrowleft" color={'white'} size={30} />
             </TouchableOpacity>
             <Text
               style={{
                 color: 'white',
                 fontSize: 20,
                 fontWeight: '400',
-                marginTop: 25,
               }}>
               Search or Add new address
             </Text>
@@ -142,6 +139,7 @@ const Styles = StyleSheet.create({
   },
   title: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   arrow: {
     margin: 30,

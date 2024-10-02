@@ -11,6 +11,7 @@ import {
   View,
   Dimensions,
 } from 'react-native';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import Geolocation from '@react-native-community/geolocation';
 import BASE_URI from '../../android/config.url';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -141,10 +142,7 @@ const Biryani = ({route}) => {
           <TouchableOpacity
             style={Styles.arrow}
             onPress={() => navigation.goBack()}>
-            <Image
-              source={require('../assets/Back.png')}
-              style={{width: 22, height: 20}}
-            />
+            <AntDesign name="arrowleft" color={'white'} size={30} />
           </TouchableOpacity>
 
           <Text style={Styles.text}>{textb}</Text>
