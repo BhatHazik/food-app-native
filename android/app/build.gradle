@@ -113,8 +113,15 @@ dependencies {
     } else {
         implementation jscFlavor
     }
-    implementation project(':react-native-maps')
+    implementation project(':react-native-vector-icons')
+
+implementation 'com.google.android.gms:play-services-location:21.0.1'
     
+
 }
+
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+
+
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)

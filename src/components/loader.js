@@ -40,7 +40,7 @@ const CircularLoader = () => {
             cy="50"
             r="35"
             stroke="url(#grad)"
-            strokeWidth="7"
+            strokeWidth="3"
             strokeLinecap="butt"
             fill="none"
           />

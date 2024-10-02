@@ -19,7 +19,8 @@ import {
   Button,
   Dimensions,
 } from 'react-native';
-
+import Feather from 'react-native-vector-icons/Feather';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import BASE_URI from '../../android/config.url';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -38,11 +39,6 @@ const Dining = () => {
   const [address, setAddress] = useState(null);
   const navigation = useNavigation();
 
-  // const VITE_MAP_TOKEN =
-  //   'pk.eyJ1IjoiYWJpZG1hcWJvb2wxMjMiLCJhIjoiY2x4NjdubnQ0MG84eDJrc2NydDV0NjNjcyJ9.s-JhY8R9FmqOT-FqjmI5og';
-
-  // const data = ['', '', '', '', '', ''];
-  // const [location, setLocation] = useState({latitude: null, longitude: null});
   const getloacationpermission = async () => {
     try {
       const granted = await PermissionsAndroid.request(
@@ -89,7 +85,8 @@ const Dining = () => {
       );
     } else {
       console.log('Not authorized');
-      navigation.navigate('LoadingPage');
+
+      // navigation.navigate('LoadingPage');
     }
   };
   const toprated = async (latitude, longitude) => {
@@ -123,7 +120,7 @@ const Dining = () => {
       );
     } else {
       console.log('Not authorized');
-      navigation.navigate('LoadingPage');
+      // navigation.navigate('LoadingPage');
     }
   };
 
@@ -150,12 +147,12 @@ const Dining = () => {
       );
     } else {
       console.log('Not authorized');
-      navigation.navigate('LoadingPage');
+      // navigation.navigate('LoadingPage');
     }
   };
 
   const getRestaurantsWithLocation = async () => {
-    setLoading(true);
+    // setLoading(true);
     Geolocation.getCurrentPosition(
       async position => {
         var latitude = position.coords.latitude;
@@ -166,7 +163,7 @@ const Dining = () => {
         await toprated(latitude, longitude);
         await popular(latitude, longitude); // Call function to fetch restaurants with obtained location
         getAddressFromCoordinates(latitude, longitude);
-        setLoading(false);
+        // setLoading(false);
       },
       error => {
         console.error('Error getting location:', error);
@@ -196,16 +193,37 @@ const Dining = () => {
     getloacationpermission();
   }, []);
 
-  // const renderItem = ({item}) => (
-  //   <View style={Styles.items}>
-  //     <TouchableOpacity
-  //       onPress={() => {
-  //         setfood('biryani'), navigation.navigate('Biryani', food,);
-  //       }}>
-  //       <Image source={item} style={{height: 133, width: 100}} />
-  //     </TouchableOpacity>
-  //   </View>
-  // );
+  const renderItem4 = ({item}) => (
+    <TouchableOpacity style={Styles.itemcover}>
+      <Image
+        source={require('../assets/cover.png')}
+        style={Styles.coverimage}
+      />
+      <Text style={Styles.restaurantname}>Wasu Darbar</Text>
+      <View
+        style={{
+          width: '100%',
+          height: 2,
+          backgroundColor: '#D6D6D6',
+          marginTop: 15,
+        }}></View>
+      <View style={Styles.timebox}>
+        <View style={Styles.rating}>
+          <Text style={{color: 'white'}}>4.0</Text>
+          <Image
+            source={require('../assets/star.png')}
+            style={{width: 12, height: 11}}
+          />
+        </View>
+        <Text style={[Styles.text1, {color: 'black'}]}>20-25 min</Text>
+      </View>
+      <View style={{marginTop: 15, left: -15}}>
+        <Text style={[Styles.text1, {color: 'black'}]}>
+          Wazwan, Fast food, Indian...
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
   const renderItem2 = ({item}) => (
     <TouchableOpacity
       style={Styles.itemcover}
@@ -214,15 +232,7 @@ const Dining = () => {
         source={require('../assets/cover.png')}
         style={Styles.coverimage}
       />
-      <Text
-        style={{
-          color: 'black',
-          marginTop: 125,
-          fontSize: 20,
-          fontWeight: '400',
-        }}>
-        {item.restaurant_name}
-      </Text>
+      <Text style={Styles.restaurantname}>hazik Restaurant</Text>
       <View
         style={{
           width: '100%',
@@ -230,61 +240,18 @@ const Dining = () => {
           backgroundColor: '#D6D6D6',
           marginTop: 15,
         }}></View>
-      <View style={{flexDirection: 'row', marginTop: 10, left: -40}}>
+      <View style={Styles.timebox}>
         <View style={item.avg_rating < 3 ? Styles.rating2 : Styles.rating}>
-          <Text style={{color: 'white'}}>{item.avg_rating}</Text>
+          <Text style={{color: 'white'}}>4.3</Text>
           <Image
             source={require('../assets/star.png')}
             style={{width: 12, height: 11}}
           />
         </View>
-        <Text style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
-          {item.delivery_time}
-        </Text>
+        <Text style={[Styles.text1, {color: 'black'}]}>40-50 min</Text>
       </View>
       <View style={{marginTop: 15, left: -15}}>
-        <Text style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
-          Wazwan, Fast food, Indian...
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-  const renderItem4 = ({item}) => (
-    <TouchableOpacity style={Styles.itemcover}>
-      <Image
-        source={require('../assets/cover.png')}
-        style={Styles.coverimage}
-      />
-      <Text
-        style={{
-          color: 'black',
-          marginTop: 125,
-          fontSize: 20,
-          fontWeight: '400',
-        }}>
-        {item.restaurant_name}
-      </Text>
-      <View
-        style={{
-          width: '100%',
-          height: 2,
-          backgroundColor: '#D6D6D6',
-          marginTop: 15,
-        }}></View>
-      <View style={{flexDirection: 'row', marginTop: 10, left: -40}}>
-        <View style={Styles.rating}>
-          <Text style={{color: 'white'}}>{item.avg_rating}</Text>
-          <Image
-            source={require('../assets/star.png')}
-            style={{width: 12, height: 11}}
-          />
-        </View>
-        <Text style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
-          {item.delivery_time}
-        </Text>
-      </View>
-      <View style={{marginTop: 15, left: -15}}>
-        <Text style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
+        <Text style={[Styles.text1, {color: 'black'}]}>
           Wazwan, Fast food, Indian...
         </Text>
       </View>
@@ -296,14 +263,8 @@ const Dining = () => {
         source={require('../assets/cover.png')}
         style={Styles.coverimage}
       />
-      <Text
-        style={{
-          color: 'white',
-          marginTop: 125,
-          fontSize: 20,
-          fontWeight: '400',
-        }}>
-        {item.restaurant_name}
+      <Text style={[Styles.restaurantname, {color: 'white'}]}>
+        Basits Darbar
       </Text>
       <View
         style={{
@@ -312,61 +273,56 @@ const Dining = () => {
           backgroundColor: '#D6D6D6',
           marginTop: 15,
         }}></View>
-      <View style={{flexDirection: 'row', marginTop: 10, left: -40}}>
+      <View style={Styles.timebox}>
         <View style={Styles.rating}>
-          <Text style={{color: 'white'}}>{item.avg_rating}</Text>
+          <Text style={{color: 'white'}}>3.0</Text>
           <Image
             source={require('../assets/star.png')}
             style={{width: 12, height: 11}}
           />
         </View>
-        <Text style={{fontSize: 16, fontWeight: '300', color: 'white'}}>
-          {item.delivery_time}
-        </Text>
+        <Text style={Styles.text1}>1-2 hr</Text>
       </View>
       <View style={{marginTop: 15, left: -15}}>
-        <Text style={{fontSize: 16, fontWeight: '300', color: 'white'}}>
-          Wazwan, Fast food, Indian...
-        </Text>
+        <Text style={Styles.text1}>Wazwan, Fast food, Indian...</Text>
       </View>
     </TouchableOpacity>
   );
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
-      <View style={{flex: 1, backgroundColor: 'white'}}>
+      <View style={Styles.container}>
         <View style={Styles.header}>
           <View style={{flexDirection: 'row'}}>
-            <TouchableOpacity
-              style={{margin: 20, marginLeft: 40}}
-              onPress={() => navigation.navigate('Address')}>
-              <Image
-                source={require('../assets/nav.png')}
-                style={{height: 16, width: 21}}
-              />
-            </TouchableOpacity>
             <View style={{flexDirection: 'row'}}>
-              <TouchableOpacity
-                style={{flexDirection: 'row', marginHorizontal: -3}}>
+              <TouchableOpacity style={Styles.addresses}>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('Address')}
+                  style={Styles.navigation}>
+                  <Feather name="navigation" color={'red'} size={20} />
+                </TouchableOpacity>
                 {address && (
-                  <Text
-                    style={{
-                      color: 'white',
-                      marginTop: 10,
-                      fontSize: 16,
-                      fontWeight: '700',
-                      position: 'static',
-                    }}>
-                    {address && address}
-                    {/* Kursu, Rajbagh{'\n'}
+                  <>
+                    <Text
+                      style={{
+                        color: 'white',
+                        fontSize: 16,
+                        fontWeight: '700',
+                        marginRight: 10,
+                      }}>
+                      {address && address}
+                      {/* Kursu, Rajbagh{'\n'}
                 190008 */}
-                  </Text>
+                    </Text>
+                    <AntDesign name="down" color={'white'} size={15} />
+                  </>
                 )}
-                <Image
-                  source={require('../assets/arrow.png')}
-                  style={Styles.arrow}
-                />
               </TouchableOpacity>
-              <TouchableOpacity>
+              <TouchableOpacity
+                style={{
+                  position: 'absolute',
+                  left: width * 0.8,
+                }}
+                onPress={() => navigation.navigate('ProfileScreen')}>
                 <Image
                   source={require('../assets/logo.png')}
                   style={Styles.logo}
@@ -375,7 +331,7 @@ const Dining = () => {
             </View>
           </View>
           <View style={{justifyContent: 'center', alignItems: 'center'}}>
-            <Text style={Styles.text1}>
+            <Text style={[Styles.text1, {fontStyle: 'italic'}]}>
               Embark on a culinary adventure {'\n'}
               Let's find your next Flavor Sensation!
             </Text>
@@ -386,19 +342,19 @@ const Dining = () => {
                 placeholderTextColor={'#FA4A0C'}
                 onPress={() => navigation.navigate('Search')}
               />
+              <AntDesign
+                name="search1"
+                color={'#FA4A0C'}
+                size={20}
+                style={Styles.searchbutton}
+              />
             </View>
           </View>
         </View>
         {loading ? (
           <Loader style={Styles.Loader} />
         ) : (
-          <View style={{marginRight: 16, marginLeft: 16}}>
-            {/* <FlatList
-            data={images}
-            renderItem={renderItem}
-            horizontal={true}
-            showsHorizontalScrollIndicator={false}
-          /> */}
+          <View>
             <ScrollView
               horizontal={true}
               showsHorizontalScrollIndicator={false}>
@@ -460,51 +416,32 @@ const Dining = () => {
               </View>
             </ScrollView>
             <View style={Styles.viewcontainer}>
-              <Text style={{fontSize: 20, fontWeight: '600', color: 'black'}}>
-                Nearest
-              </Text>
+              <Text style={Styles.boldtext}>Nearest</Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate('Nearest')}
-                style={{flexDirection: 'row', marginTop: 2}}>
-                <Text style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
-                  View All
-                </Text>
-                <Image
-                  source={require('../assets/arrow2.png')}
-                  style={Styles.arrow2}
-                />
+                style={Styles.viewbox}>
+                <Text style={Styles.viewtext}>View All</Text>
+                <AntDesign name="down" size={15} color="black" />
               </TouchableOpacity>
             </View>
 
-            <View>
+            <View style={Styles.restautrantbox}>
               <FlatList
-                data={restautrants}
+                data={[1, 2, 3, 4, 5, 6, 7, 8, 9]}
                 renderItem={renderItem2}
                 horizontal={true}
                 keyExtractor={item => item.id}
                 showsHorizontalScrollIndicator={false}
+                ListHeaderComponent={<></>}
               />
             </View>
             <View style={Styles.viewcontainer}>
-              <Text
-                style={{
-                  fontSize: 20,
-                  fontWeight: '600',
-                  marginTop: 20,
-                  color: 'black',
-                }}>
-                Top Rated
-              </Text>
+              <Text style={Styles.boldtext}>Top Rated</Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate('Toprated')}
-                style={{flexDirection: 'row', marginTop: 22}}>
-                <Text style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
-                  View All
-                </Text>
-                <Image
-                  source={require('../assets/arrow2.png')}
-                  style={Styles.arrow2}
-                />
+                style={Styles.viewbox}>
+                <Text style={Styles.viewtext}>View All</Text>
+                <AntDesign name="down" size={15} color="black" />
               </TouchableOpacity>
             </View>
 
@@ -530,47 +467,37 @@ const Dining = () => {
                     </Text>
                   </View>
                 )}
-
-                <FlatList
-                  data={topRated}
-                  renderItem={renderItem4}
-                  horizontal={true}
-                  showsHorizontalScrollIndicator={false}
-                />
+                <View style={Styles.restautrantbox}>
+                  <FlatList
+                    data={[
+                      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+                      18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+                    ]}
+                    renderItem={renderItem4}
+                    horizontal={true}
+                    keyExtractor={item => item.id}
+                    showsHorizontalScrollIndicator={false}
+                  />
+                </View>
               </View>
               <View style={Styles.viewcontainer}>
-                <Text
-                  style={{
-                    fontSize: 20,
-                    fontWeight: '600',
-                    marginTop: 20,
-                    marginBottom: 5,
-                    color: 'black',
-                  }}>
-                  Popular Brands
-                </Text>
+                <Text style={Styles.boldtext}>Popular Brands</Text>
                 <TouchableOpacity
                   onPress={() => navigation.navigate('Popular')}
-                  style={{
-                    flexDirection: 'row',
-                    marginTop: 22,
-                    marginBottom: 5,
-                  }}>
-                  <Text
-                    style={{fontSize: 16, fontWeight: '300', color: 'black'}}>
-                    View All
-                  </Text>
-                  <Image
-                    source={require('../assets/arrow2.png')}
-                    style={Styles.arrow2}
-                  />
+                  style={Styles.viewbox}>
+                  <Text style={Styles.viewtext}>View All</Text>
+                  <AntDesign name="down" size={15} color="black" />
                 </TouchableOpacity>
               </View>
               <View style={Styles.bigcontainer}>
                 <FlatList
-                  data={Popular}
+                  data={[
+                    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+                    18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+                  ]}
                   renderItem={renderItem3}
                   horizontal={true}
+                  keyExtractor={item => item.id}
                   showsHorizontalScrollIndicator={false}
                 />
               </View>
@@ -584,11 +511,14 @@ const Dining = () => {
 export default Dining;
 const Styles = StyleSheet.create({
   header: {
-    height: 200,
-    width: '100%',
+    height: height * 0.26,
+    width: width * 1,
     backgroundColor: '#202020',
     borderBottomLeftRadius: 50,
     borderBottomRightRadius: 50,
+    alignSelf: 'center',
+    marginTop: -16,
+    padding: 16,
   },
   arrow: {
     height: 6,
@@ -599,14 +529,11 @@ const Styles = StyleSheet.create({
   logo: {
     height: 50,
     width: 50,
-    marginHorizontal: width * 0.15,
-    marginTop: 12,
   },
   text1: {
     color: 'white',
     fontSize: 16,
     fontWeight: '300',
-    fontStyle: 'italic',
   },
   textbox: {
     color: '#FA4A0C',
@@ -615,6 +542,7 @@ const Styles = StyleSheet.create({
     borderRadius: 10,
     height: 40,
     paddingLeft: 18,
+    position: 'relative',
   },
   textcontainer: {
     marginTop: 25,
@@ -637,13 +565,10 @@ const Styles = StyleSheet.create({
   viewcontainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginEnd: -7,
+    alignItems: 'center',
+    marginVertical: 15,
   },
-  arrow2: {
-    height: 6,
-    width: 11,
-    margin: 8,
-  },
+
   itemcover: {
     height: 250,
     width: 260,
@@ -704,5 +629,51 @@ const Styles = StyleSheet.create({
   Loader: {
     position: 'static',
     top: '188px',
+  },
+  addresses: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    borderColor: 'white',
+    justifyContent: 'space-around',
+    marginLeft: 16,
+    marginBottom: 20,
+  },
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: 'white',
+  },
+  navigation: {
+    marginRight: 20,
+  },
+  searchbutton: {
+    position: 'absolute',
+    left: '90%',
+    top: '25%',
+  },
+  viewtext: {
+    fontSize: 16,
+    fontWeight: '300',
+    color: 'black',
+    marginRight: 5,
+  },
+  boldtext: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: 'black',
+  },
+  viewbox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  restaurantname: {
+    color: 'black',
+    marginTop: 125,
+    fontSize: 20,
+    fontWeight: '400',
+  },
+  timebox: {
+    flexDirection: 'row',
+    marginTop: 10,
   },
 });

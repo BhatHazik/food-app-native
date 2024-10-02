@@ -1,5 +1,5 @@
 import {useNavigation} from '@react-navigation/native';
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {
   Text,
   View,
@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import GoogleMapScreen from '../../src/screens/map';
 import axios from 'axios';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 
 const {width, height} = Dimensions.get('window');
 
@@ -24,43 +25,26 @@ const MapScreen = () => {
   const [lastId, setLastId] = useState(0);
   const [cordinates, setCordinates] = useState({});
   const [address, setAddress] = useState(null);
+  const [newAddress, setNewAddress] = useState('');
+  const [Data, setData] = useState(null);
+  const [inputText, setInputText] = useState('');
 
-  const handleAddressUpdate = newAddress => {
-    setAddress(newAddress);
-    console.log(address, 'this is parent components data');
-  };
-  // const [locationDetails, setLocationDetails] = useState(null);
-
-  // const fetchLocationDetails = async text => {
-  //   const apiKey = 'AIzaSyB77RLDWk3eX_48GZQcHgYzXXN_VznBq_k';
-  //   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-  //     text,
-  //   )}&key=${apiKey}`;
-
-  //   await axios
-  //     .get(url)
-  //     .then(
-  //       response => {
-  //         console.log(response);
-  //         if (response.data.status === 'OK') {
-  //           setLocationDetails(response.data.results[0]);
-  //           console.log(locationDetails);
-  //         } else {
-  //           console.error(
-  //             'Error fetching location details:',
-  //             response.data.status,
-  //           );
-  //         }
-  //       },
-  //       err => {
-  //         console.log(err);
-  //       },
-  //     )
-  //     .catch(error => {
-  //       console.error('Error fetching location details:', error);
-  //     });
+  // const handleAddressUpdate = newAddress => {
+  //   setaddress2(newAddress);
+  //   // console.log(address, 'this is parent components data');
+  //   // setData(address);
+  //   console.log(address2, 'this is data of your location');
+  //   // setData(inputText);
+  //   // console.log(Data);
   // };
-
+  const handleAddressUpdate = useCallback(newAddress => {
+    setAddress(prevAddress => {
+      if (prevAddress !== newAddress) {
+        console.log(newAddress, 'this is data of your location');
+        return newAddress;
+      }
+    });
+  }, []);
   const footerHeight = useRef(new Animated.Value(height * 0.28)).current;
   const footerBackgroundColor = useRef(new Animated.Value(0)).current;
   const headerHeight = useRef(new Animated.Value(height * 0.2)).current;
@@ -73,6 +57,9 @@ const MapScreen = () => {
       onPress={() => {
         // console.log(item.lat, item.lon);
         setCordinates({lat: item.lat, lon: item.lon});
+        const latitude = item.lat;
+        const longitude = item.lon;
+        getAddressFromCoordinates(latitude, longitude);
         SetSearchPopDown(!searchPopDown);
       }}>
       <Image
@@ -132,6 +119,19 @@ const MapScreen = () => {
   //   getLatLongFromAddress(text);
   //   // fetchLocationDetails(text);
   // };
+
+  const getAddressFromCoordinates = async (latitude, longitude) => {
+    try {
+      const response = await axios.get(
+        `https://us1.locationiq.com/v1/reverse?key=${accessToken}&lat=${latitude}&lon=${longitude}&format=json`,
+      );
+      setNewAddress(response.data);
+      console.log(address, 'okok');
+    } catch (error) {
+      console.error(error);
+      setNewAddress('Error occurred');
+    }
+  };
 
   const handleInputChange = text => {
     if (text.length === 0) {
@@ -223,10 +223,7 @@ const MapScreen = () => {
               onPress={
                 searchPopDown ? handleSearchPopDown : () => navigation.goBack()
               }>
-              <Image
-                source={require('../assets/Back.png')}
-                style={{width: 22, height: 20}}
-              />
+              <AntDesign name="arrowleft" color={'white'} size={30} />
             </TouchableOpacity>
             <Text style={Styles.headerText}>Search or Add new address</Text>
           </View>
@@ -311,12 +308,25 @@ const MapScreen = () => {
                     ? {fontWeight: '600', color: 'white'}
                     : {fontWeight: '600', color: 'black'}
                 }>
-                {address.address.road ||
-                  address.address.suburb ||
-                  'Pin to Locate'}
+                {newAddress
+                  ? newAddress.address.road ||
+                    newAddress.address.suburb ||
+                    newAddress.address.village ||
+                    newAddress.address.state_district
+                  : address
+                  ? address.address.suburb ||
+                    address.address.road ||
+                    newAddress.address.village ||
+                    address.address.state_district
+                  : 'pin to locate'}
               </Text>
+
               <Text style={popup ? {color: 'white'} : {color: 'black'}}>
-                {address.address.city}
+                {newAddress
+                  ? newAddress.address.city || newAddress.address.postcode
+                  : address
+                  ? address.address.city || address.address.postcode
+                  : 'pin to locate'}
               </Text>
             </View>
           </TouchableOpacity>
@@ -339,7 +349,7 @@ const MapScreen = () => {
               style={[Styles.input, {marginTop: 10}]}
               placeholder="House / Flat / Floor"
               placeholderTextColor={'#FFF'}
-              onPress={handlePopup}
+              onChangeText={text2 => setInputText(text2)}
             />
             <TextInput
               style={Styles.input}
@@ -413,6 +423,7 @@ const Styles = StyleSheet.create({
   },
   title: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   arrow: {
     margin: 30,
@@ -421,7 +432,6 @@ const Styles = StyleSheet.create({
     color: 'white',
     fontSize: 20,
     fontWeight: '400',
-    marginTop: 25,
   },
   Searchinput: {
     color: '#FA4A0C',
